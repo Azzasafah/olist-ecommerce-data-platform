@@ -150,6 +150,15 @@ def cmd_model(a):
     if res.returncode != 0:
         sys.exit(res.returncode)
 
+def cmd_marts(a):
+    cmd = [sys.executable, str(ROOT / "scripts" / "build_data_marts.py")]
+    res = subprocess.run(cmd, capture_output=True, text=True)
+    print(res.stdout)
+    if res.stderr:
+        print(res.stderr, file=sys.stderr)
+    if res.returncode != 0:
+        sys.exit(res.returncode)
+
 def todo(stage: str, target: str):
     def fn(a):
         print(f"[{stage}] belum diimplementasikan.\n  Target: {target}\n  Lihat TUGAS_BESAR.md bagian {stage}.")
@@ -170,9 +179,9 @@ p = SUB.add_parser("silver"); p.set_defaults(func=cmd_silver)
 p = SUB.add_parser("load"); p.set_defaults(func=cmd_load)
 p = SUB.add_parser("stream"); p.set_defaults(func=cmd_stream)
 p = SUB.add_parser("model"); p.set_defaults(func=cmd_model)
+p = SUB.add_parser("marts"); p.set_defaults(func=cmd_marts)
 
 for name, stage, target in [
-    ("marts", "T5", "mart.* + rekonsiliasi + ekspor gold → outputs/marts_report.md"),
     ("inject", "T6", "≥ 5 failure injection yang pulih sendiri → outputs/failure_tests.md"),
     ("report", "T6", "EVALUATION_EVIDENCE.md dari outputs/*.json"),
 ]:
