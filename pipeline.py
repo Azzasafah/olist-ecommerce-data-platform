@@ -132,6 +132,15 @@ def cmd_load(a):
     if res.returncode != 0:
         sys.exit(res.returncode)
 
+def cmd_stream(a):
+    cmd = [sys.executable, str(ROOT / "scripts" / "stream_pipeline.py")]
+    res = subprocess.run(cmd, capture_output=True, text=True)
+    print(res.stdout)
+    if res.stderr:
+        print(res.stderr, file=sys.stderr)
+    if res.returncode != 0:
+        sys.exit(res.returncode)
+
 def todo(stage: str, target: str):
     def fn(a):
         print(f"[{stage}] belum diimplementasikan.\n  Target: {target}\n  Lihat TUGAS_BESAR.md bagian {stage}.")
@@ -150,9 +159,10 @@ p = SUB.add_parser("profile"); p.set_defaults(func=cmd_profile)
 p = SUB.add_parser("bronze"); p.set_defaults(func=cmd_bronze)
 p = SUB.add_parser("silver"); p.set_defaults(func=cmd_silver)
 p = SUB.add_parser("load"); p.set_defaults(func=cmd_load)
+p = SUB.add_parser("stream"); p.set_defaults(func=cmd_stream)
+
 
 for name, stage, target in [
-    ("stream", "T3", "producer replay + consumer idempoten + DLQ + freshness → outputs/stream_report.md"),
     ("model", "T4", "star schema dw.* dengan PK/FK terpasang → outputs/dw_report.md"),
     ("marts", "T5", "mart.* + rekonsiliasi + ekspor gold → outputs/marts_report.md"),
     ("inject", "T6", "≥ 5 failure injection yang pulih sendiri → outputs/failure_tests.md"),
