@@ -10,7 +10,7 @@ Tiap sub-perintah di bawah hanya menjelaskan targetnya lalu berhenti — ganti b
     ...
 """
 
-from __future__ import annotations
+from sqlalchemy import true
 
 import argparse
 import shutil
@@ -76,9 +76,34 @@ def cmd_up(a):
     if missing:
         sys.exit(f"TIMEOUT: belum healthy: {missing} — cek `docker compose ps` dan `docker compose logs <svc>`")
 
-
 def cmd_down(a):
     compose("down", *(["-v"] if a.volumes else []))
+
+
+def cmd_check(a):
+    out_file = ROOT / "outputs" / "dataset_check.md"
+    out_file.parent.mkdir(parents=True, exist_ok=True)
+    cmd = [sys.executable, str(ROOT / "scripts" / "check_dataset.py")]
+    res = subprocess.run(cmd, capture_output=True, text=True)
+    print(res.stdout)
+    if res.stderr:
+        print(res.stderr, file=sys.stderr)
+    out_file.write_text(f"# Dataset Check Report\n\n```text\n{res.stdout}\n```\n", encoding="utf-8")
+    print(f"[check] Laporan disimpan ke {out_file}")
+    if res.returncode != 0:
+        sys.exit(res.returncode)
+
+
+def cmd_profile(a):
+    out_file = ROOT / "outputs" / "profile.md"
+    out_file.parent.mkdir(parents=True, exist_ok=True)
+    cmd = [sys.executable, str(ROOT / "scripts" / "profile_dataset.py")]
+    res = subprocess.run(cmd, capture_output=True, text=True)
+    print(res.stdout)
+    if res.stderr:
+        print(res.stderr, file=sys.stderr)
+    if res.returncode != 0:
+        sys.exit(res.returncode)
 
 
 def todo(stage: str, target: str):
@@ -93,9 +118,11 @@ SUB = PARSER.add_subparsers(dest="cmd", required=True)
 p = SUB.add_parser("init"); p.set_defaults(func=cmd_init)
 p = SUB.add_parser("up"); p.add_argument("--build", action="store_true", help="bangun image jupyter (pertama kali)"); p.set_defaults(func=cmd_up)
 p = SUB.add_parser("down"); p.add_argument("-v", "--volumes", action="store_true"); p.set_defaults(func=cmd_down)
+
+p = SUB.add_parser("check"); p.set_defaults(func=cmd_check)
+p = SUB.add_parser("profile"); p.set_defaults(func=cmd_profile)
+
 for name, stage, target in [
-    ("check", "T0", "9 file ada & sesuai kontrak → outputs/dataset_check.md"),
-    ("profile", "T0", "profil per tabel + daftar temuan bernomor → outputs/profile.md"),
     ("bronze", "T1", "CSV → MinIO bronze apa adanya, manifest, idempoten → outputs/bronze_report.md"),
     ("silver", "T2", "tipe sesuai kontrak, gate kualitas, karantina → outputs/dq_report.md"),
     ("load", "T2", "silver → raw.* dengan COPY, TRUNCATE+COPY satu transaksi → outputs/load_report.md"),
@@ -110,3 +137,4 @@ for name, stage, target in [
 if __name__ == "__main__":
     args = PARSER.parse_args()
     args.func(args)
+
