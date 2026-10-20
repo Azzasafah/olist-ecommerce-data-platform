@@ -105,6 +105,23 @@ def cmd_profile(a):
     if res.returncode != 0:
         sys.exit(res.returncode)
 
+def cmd_bronze(a):
+    cmd = [sys.executable, str(ROOT / "scripts" / "ingest_bronze.py")]
+    res = subprocess.run(cmd, capture_output=True, text=True)
+    print(res.stdout)
+    if res.stderr:
+        print(res.stderr, file=sys.stderr)
+    if res.returncode != 0:
+        sys.exit(res.returncode)
+
+def cmd_silver(a):
+    cmd = [sys.executable, str(ROOT / "scripts" / "process_silver.py")]
+    res = subprocess.run(cmd, capture_output=True, text=True)
+    print(res.stdout)
+    if res.stderr:
+        print(res.stderr, file=sys.stderr)
+    if res.returncode != 0:
+        sys.exit(res.returncode)
 
 def todo(stage: str, target: str):
     def fn(a):
@@ -121,10 +138,10 @@ p = SUB.add_parser("down"); p.add_argument("-v", "--volumes", action="store_true
 
 p = SUB.add_parser("check"); p.set_defaults(func=cmd_check)
 p = SUB.add_parser("profile"); p.set_defaults(func=cmd_profile)
+p = SUB.add_parser("bronze"); p.set_defaults(func=cmd_bronze)
+p = SUB.add_parser("silver"); p.set_defaults(func=cmd_silver)
 
 for name, stage, target in [
-    ("bronze", "T1", "CSV → MinIO bronze apa adanya, manifest, idempoten → outputs/bronze_report.md"),
-    ("silver", "T2", "tipe sesuai kontrak, gate kualitas, karantina → outputs/dq_report.md"),
     ("load", "T2", "silver → raw.* dengan COPY, TRUNCATE+COPY satu transaksi → outputs/load_report.md"),
     ("stream", "T3", "producer replay + consumer idempoten + DLQ + freshness → outputs/stream_report.md"),
     ("model", "T4", "star schema dw.* dengan PK/FK terpasang → outputs/dw_report.md"),
