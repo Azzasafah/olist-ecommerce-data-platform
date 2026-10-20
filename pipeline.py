@@ -150,6 +150,23 @@ def cmd_model(a):
     if res.returncode != 0:
         sys.exit(res.returncode)
 
+def cmd_inject(a):
+    cmd = [sys.executable, str(ROOT / "scripts" / "run_failure_tests.py")]
+    res = subprocess.run(cmd, capture_output=True, text=True)
+    print(res.stdout)
+    if res.stderr:
+        print(res.stderr, file=sys.stderr)
+    if res.returncode != 0:
+        sys.exit(res.returncode)
+def cmd_report(a):
+    cmd = [sys.executable, str(ROOT / "scripts" / "generate_final_report.py")]
+    res = subprocess.run(cmd, capture_output=True, text=True)
+    print(res.stdout)
+    if res.stderr:
+        print(res.stderr, file=sys.stderr)
+    if res.returncode != 0:
+        sys.exit(res.returncode)
+
 def cmd_marts(a):
     cmd = [sys.executable, str(ROOT / "scripts" / "build_data_marts.py")]
     res = subprocess.run(cmd, capture_output=True, text=True)
@@ -180,12 +197,9 @@ p = SUB.add_parser("load"); p.set_defaults(func=cmd_load)
 p = SUB.add_parser("stream"); p.set_defaults(func=cmd_stream)
 p = SUB.add_parser("model"); p.set_defaults(func=cmd_model)
 p = SUB.add_parser("marts"); p.set_defaults(func=cmd_marts)
+p = SUB.add_parser("inject"); p.set_defaults(func=cmd_inject)
+p = SUB.add_parser("report"); p.set_defaults(func=cmd_report)
 
-for name, stage, target in [
-    ("inject", "T6", "≥ 5 failure injection yang pulih sendiri → outputs/failure_tests.md"),
-    ("report", "T6", "EVALUATION_EVIDENCE.md dari outputs/*.json"),
-]:
-    p = SUB.add_parser(name); p.set_defaults(func=todo(stage, target))
 
 if __name__ == "__main__":
     args = PARSER.parse_args()
